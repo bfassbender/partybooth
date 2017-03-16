@@ -23,4 +23,39 @@
 - sudo apt-get install imagemagick
 - sudo apt-get install python-imaging
 
-## Running
+## Tweaking Raspberry Pi Pixel
+### Disable Tooltips
+nano ~/.themes/PiX/gtk-2.0/gtkrc
+add
+gtk-enable-tooltips = 0
+
+
+### Disable Screensaver & Mouse Pointer over Start Menu
+```bash
+nano .config/lxsession/LXDE-pi/autostart
+```   
+Comment out:
+
+```bash
+# @xscreensaver -no-splash
+# @point-rpi
+```
+### Autostart PartyBooth
+```bash
+nano .config/lxsession/LXDE-pi/autostart
+```   
+add
+```bash
+@python <path_to_PartyBooth>/PartyBooth.py
+```
+
+
+### Disable Screen Blanking & Mouse Pointer
+```bash
+sudo nano /etc/lightdm/lightdm.conf
+```
+edit / add the following line in section [SeatDefaults]
+```bash
+[SeatDefaults]
+xserver-command=X -s 0 -dpms -nocursor
+```
