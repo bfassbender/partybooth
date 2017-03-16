@@ -45,7 +45,7 @@ class CameraAdapter(object):
     def transferPicture(self, photoset):
         camera_path = photoset['camerapaths'][len(photoset['camerapaths']) - 1]
         filename = "%s_%s.jpg" % (photoset['id'], len(photoset['photos']) + 1)
-        target_path = os.path.join(CONSTANTS.PWD, CONSTANTS.CAPTURE_FOLDER, filename)
+        target_path = os.path.join(CONSTANTS.CAPTURE_FOLDER, filename)
         self.logger.debug('Copying image to {0}'.format(target_path))
         self.camera.init(self.context)
         camera_file = self.camera.file_get(camera_path.folder, camera_path.name, gp.GP_FILE_TYPE_NORMAL, self.context)
@@ -84,7 +84,7 @@ class FakeCameraAdapter(CameraAdapter):
     logger = logging.getLogger("FakeCameraAdapter")
 
     def takePicture(self, photoset):
-        source_path = os.path.join(CONSTANTS.PWD, CONSTANTS.STUB_IMAGE_FOLDER,
+        source_path = os.path.join(CONSTANTS.STUB_IMAGE_FOLDER,
                                    str(len(photoset['photos']) + 1) + self.IMAGE_EXTENSION)
 
         photoset['photos'].append(source_path)
