@@ -9,9 +9,9 @@ PWD = os.path.abspath(os.path.dirname(__file__))
 
 TITLE_FONT = ("Roboto Condensed", 18, "bold")
 
-CAPTURE_FOLDER = os.path.join(PWD, "captures")
+CAPTURE_FOLDER = os.path.join("/media/usb")
 
-TEMP_FOLDER = os.path.join(PWD, "temp")
+TEMP_FOLDER = os.path.join("/media/usb/temp")
 
 PHOTOS_FOLDER = os.path.join(PWD, "photos")
 
