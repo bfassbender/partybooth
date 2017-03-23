@@ -22,7 +22,7 @@ class PartyBoothController(object):
 
     def startCountDown(self):
         page = self.partyBoothUI.showPage(CountDownPage.__name__)
-        page.countDown()
+        page.showSmileLabel()
         photoset = self.createPhotoset()
         self.capturePhoto(photoset)
 

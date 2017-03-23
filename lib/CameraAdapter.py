@@ -1,6 +1,7 @@
 # coding=UTF-8
 import logging
 import os
+import time
 
 import gphoto2 as gp
 
@@ -84,6 +85,7 @@ class FakeCameraAdapter(CameraAdapter):
     logger = logging.getLogger("FakeCameraAdapter")
 
     def takePicture(self, photoset):
+        time.sleep(1);
         source_path = os.path.join(CONSTANTS.STUB_IMAGE_FOLDER,
                                    str(len(photoset['photos']) + 1) + self.IMAGE_EXTENSION)
 
