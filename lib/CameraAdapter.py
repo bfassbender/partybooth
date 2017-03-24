@@ -63,8 +63,8 @@ class CameraAdapter(object):
         self._setCameraParameter('capturetarget', CAPTURETARGET_MEMORY_CARD)
 
     def _setImageTypeToJpg(self):
-        self._setCameraParameter('imageformat', IMAGEFORMAT_JPG_LARGE_FINE)
-        self._setCameraParameter('imageformatcf', IMAGEFORMAT_JPG_LARGE_FINE)
+        self._setCameraParameter('imageformat', IMAGEFORMAT_JPG_MEDIUM_FINE)
+        self._setCameraParameter('imageformatcf', IMAGEFORMAT_JPG_MEDIUM_FINE)
 
     def _setCameraParameter(self, parameter, to_value):
         # get configuration tree
