@@ -42,7 +42,7 @@ class PhotoReviewPage(tk.Frame):
             self.logger.error("Error while creating thumbnail: " + thumb_path)
 
         self.logger.info("Loading Thumbnail " + thumb_path)
-        load = Image.open(os.path.join(CONSTANTS.CAPTURE_FOLDER, thumb_path))
+        load = Image.open(thumb_path)
         self.logger.info("Thumbnail Format: (%s - %s - %s)" % (load.format, load.size, load.mode))
 
         render = ImageTk.PhotoImage(image=load)
