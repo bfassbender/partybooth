@@ -28,24 +28,35 @@ class PhotoReviewPage(tk.Frame):
 
         photo_path = photoset['photos'][len(photoset['thumbs']) - 1]
 
-        thumb_filename = "thumb.jpg"
-        thumb_path = os.path.join(CONSTANTS.TEMP_FOLDER, thumb_filename)
+        # thumb_filename = "thumb.jpg"
+        # thumb_path = os.path.join(CONSTANTS.TEMP_FOLDER, thumb_filename)
 
-        self.logger.info("Creating Thumbnail " + thumb_path)
-        subprocess.check_call(
-            ['convert', photo_path, '-define', 'jpeg:size=1400x920', '-strip', '-thumbnail', '800x470', '-quality',
-             '80', thumb_path])
-        if os.path.isfile(thumb_path):
-            photoset['thumbs'].append(thumb_path)
-            self.logger.info("Added Thumbnail to Photoset " + thumb_path)
-        else:
-            self.logger.error("Error while creating thumbnail: " + thumb_path)
+        #self.logger.info("Creating Thumbnail " + thumb_path)
+        #subprocess.check_call(
+        #    ['convert', photo_path, '-define', 'jpeg:size=1400x920', '-strip', '-thumbnail', '800x470', '-quality',
+        #     '80', thumb_path])
+        #if os.path.isfile(thumb_path):
+        #   photoset['thumbs'].append(thumb_path)
+        #    self.logger.info("Added Thumbnail to Photoset " + thumb_path)
+        #else:
+        #    self.logger.error("Error while creating thumbnail: " + thumb_path)
+        #
+        # self.logger.info("Loading Thumbnail " + thumb_path)
+        # load = Image.open(thumb_path)
+        # self.logger.info("Thumbnail Format: (%s - %s - %s)" % (load.format, load.size, load.mode))
 
-        self.logger.info("Loading Thumbnail " + thumb_path)
-        load = Image.open(thumb_path)
-        self.logger.info("Thumbnail Format: (%s - %s - %s)" % (load.format, load.size, load.mode))
+        self.logger.info("Loading photo " + photo_path)
+        load = Image.open(photo_path)
+        self.logger.info("Photo loaded, format: (%s - %s - %s)" % (load.format, load.size, load.mode))
+        
+	self.logger.info("Resizing photo for display");
+	baseHeight = 470
+	heightRatio = (baseHeight / float(load.size[1]))
+	calculatedWidth = int((float(load.size[0]) * float(heightRatio)))
+	load = load.resize((calculatedWidth, baseHeight), Image.NEAREST)
+	self.logger.info("Displaying photo")
 
-        render = ImageTk.PhotoImage(image=load)
+	render = ImageTk.PhotoImage(image=load)
 
         self.imageLabel.image = render
         self.imageLabel.configure(image=render)
