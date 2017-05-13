@@ -2,6 +2,7 @@
 
 # import tkinter as tk   # python3
 import Tkinter as tk  # python
+import tkFont
 import logging
 
 from PIL import ImageTk
@@ -29,6 +30,7 @@ class PartyBooth(tk.Tk):
         self.attributes("-fullscreen", True)
 
         self.frames = {}
+        self.current_frame = None
         self.controller = PartyBoothController(self)
         self.controller.prepare_directory_structure()
 
@@ -36,11 +38,18 @@ class PartyBooth(tk.Tk):
 
         self.container = self.initializePageContainer()
         self.registerPages()
+        self.logFonts()
         self.logger.info("####################################################################")
         self.logger.info("#                        PARTYBOOTH STARTED                        #")
         self.logger.info("####################################################################")
         self.controller.connectToCamera()
         # background.lower()
+
+    def logFonts(self):
+        fonts = list(tkFont.families())
+        fonts.sort()
+        for font in fonts:
+            self.logger.debug(font)
 
     def showPage(self, page_name):
         self.logger.info("Showing '%s'" % page_name)
@@ -55,6 +64,7 @@ class PartyBooth(tk.Tk):
         frame.grid()
         self.update()
         frame.event_generate("<<PAGE_ACTIVATED>>")
+        self.current_frame = frame
         return frame
 
     def initializePageContainer(self):
@@ -110,6 +120,8 @@ class PartyBooth(tk.Tk):
         # Configure other Loggers
         logging.getLogger('gphoto2').setLevel(logging.ERROR)
 
+    def getCurrentFrame(self):
+        return self.current_frame
 
 if __name__ == "__main__":
     app = PartyBooth()

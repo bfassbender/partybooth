@@ -9,7 +9,7 @@ class CountDownPage(tk.Frame):
     COUNTDOWN_TICK_LENGTH = 1
 
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent, width=780, height=300)
+        tk.Frame.__init__(self, parent, width=800, height=480)
         self.pack_propagate(0)
         self.controller = controller
 
@@ -17,12 +17,12 @@ class CountDownPage(tk.Frame):
 
         self.countdownText = tk.StringVar()
         self.countdownText.set(self.countdownLength)
-        self.countdownLabel = tk.Label(self, fg='white', bg='red', borderwidth=10,
+        self.countdownLabel = tk.Label(self, fg='white', bg='green', borderwidth=10,
                                        textvariable=self.countdownText,
                                        font=(CONSTANTS.FONT_FACE, CONSTANTS.FONT_SIZE_HUGE))
 
-        self.smileLabel = tk.Label(self, fg='white', bg='red', borderwidth=10,
-                                   text='Lächeln :)',
+        self.smileLabel = tk.Label(self, fg='white', bg='green', borderwidth=10,
+                                   text='SMILE :)',
                                    font=(CONSTANTS.FONT_FACE, CONSTANTS.FONT_SIZE_SEMI_HUGE))
 
     def countDown(self):
