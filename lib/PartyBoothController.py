@@ -52,7 +52,7 @@ class PartyBoothController(object):
             self.cameraAdapter.transferPicture(photoset)
             frame.displayLastPhoto(photoset)
             self.setCurrentStateTo(PartyBoothController.STATE_REVIEWING)
-        except gp.GPhoto2Error as e:
+        except Exception as e:
             self.logger.error("Taking Picture failed")
             self.setCurrentStateTo(PartyBoothController.STATE_ERROR)
             self.logger.exception(e)
@@ -111,7 +111,9 @@ class PartyBoothController(object):
                 self.logger.warn("Could not connect to camera. Retrying ...")
                 frame.after(2000, self.checkCameraConnection, frame)
             else:
-                raise
+                self.setCurrentStateTo(PartyBoothController.STATE_ERROR)
+                self.logger.exception(ex)
+                self.partyBoothUI.showPage(ErrorPage.__name__)
 
     def onRfButtonPressed(self, event):
         if PartyBoothController.STATE_READY == self.current_state:

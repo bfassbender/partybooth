@@ -38,7 +38,7 @@ class PartyBooth(tk.Tk):
 
         self.container = self.initializePageContainer()
         self.registerPages()
-        self.logFonts()
+        # self.logFonts()
         self.logger.info("####################################################################")
         self.logger.info("#                        PARTYBOOTH STARTED                        #")
         self.logger.info("####################################################################")

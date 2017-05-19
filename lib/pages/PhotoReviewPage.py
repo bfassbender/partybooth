@@ -29,23 +29,6 @@ class PhotoReviewPage(tk.Frame):
 
         photo_path = photoset['photos'][len(photoset['thumbs']) - 1]
 
-        # thumb_filename = "thumb.jpg"
-        # thumb_path = os.path.join(CONSTANTS.TEMP_FOLDER, thumb_filename)
-
-        #self.logger.info("Creating Thumbnail " + thumb_path)
-        #subprocess.check_call(
-        #    ['convert', photo_path, '-define', 'jpeg:size=1400x920', '-strip', '-thumbnail', '800x470', '-quality',
-        #     '80', thumb_path])
-        #if os.path.isfile(thumb_path):
-        #   photoset['thumbs'].append(thumb_path)
-        #    self.logger.info("Added Thumbnail to Photoset " + thumb_path)
-        #else:
-        #    self.logger.error("Error while creating thumbnail: " + thumb_path)
-        #
-        # self.logger.info("Loading Thumbnail " + thumb_path)
-        # load = Image.open(thumb_path)
-        # self.logger.info("Thumbnail Format: (%s - %s - %s)" % (load.format, load.size, load.mode))
-
         self.logger.info("Loading photo " + photo_path)
         load = Image.open(photo_path)
         self.logger.info("Photo loaded, format: (%s - %s - %s)" % (load.format, load.size, load.mode))
@@ -65,7 +48,7 @@ class PhotoReviewPage(tk.Frame):
         self.label.pack_forget()
         self.imageLabel.pack(fill=tk.BOTH, expand=True)
 
-        self.after_id = self.after(5000, self.returnToStartPage)
+        self.after_id = self.after(4000, self.returnToStartPage)
         self.logger.debug("Registered after_id: %s" % self.after_id)
 
     def returnToStartPage(self):

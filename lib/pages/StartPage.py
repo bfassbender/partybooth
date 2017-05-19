@@ -12,7 +12,7 @@ class StartPage(tk.Frame):
         self.controller = controller
 
         self.label = tk.Label(self, fg='white', bg='DarkOrange1',
-                              text="Drücke bitte den\nAuslöser,\n um ein Foto\nzu machen.",
+                              text="Drücke bitte\nden Auslöser,\n um ein Foto\nzu machen.",
                               font=(CONSTANTS.FONT_FACE, CONSTANTS.FONT_SIZE_LARGE))
         self.label.bind("<Button-1>", lambda event: self.controller.startCountDown())
         self.label.pack(fill=tk.BOTH, expand=True)

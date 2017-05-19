@@ -2,6 +2,7 @@
 import logging
 import os
 import time
+from datetime import datetime
 
 import gphoto2 as gp
 
@@ -27,37 +28,46 @@ class CameraAdapter(object):
         self.camera = gp.Camera()
 
     def connectToCamera(self):
-        self.logger.info("Connecting to Camera...")
-        self.camera.init(self.context)
-        self._setCaptureTargetToCard()
-        self._setImageTypeToJpg()
-        self.camera.exit(self.context)
-        self.logger.info("Connection successful!")
+        try:
+            self.logger.info("Connecting to Camera...")
+            self._init_camera()
+            self._setCaptureTargetToCard()
+            self._setImageTypeToJpg()
+            self.logger.info("Connection successful!")
+        finally:
+            self._exit_camera()
 
     def takePicture(self, photoset):
-        self.logger.info("Taking Photo...")
-        self.camera.init(self.context)
-        # subprocess.call(['gphoto2', '--capture-image-and-download', '--keep', '--force-overwrite', '--filename', target_path])
-        camera_path = self.camera.capture(gp.GP_CAPTURE_IMAGE, self.context)
-        self.camera.exit(self.context)
-        self.logger.info('Image on camera {0}/{1}'.format(camera_path.folder, camera_path.name))
-        photoset['camerapaths'].append(camera_path)
+        try:
+            self.logger.info("Taking Photo...")
+            self._init_camera()
+            # subprocess.call(['gphoto2', '--capture-image-and-download', '--keep', '--force-overwrite', '--filename', target_path])
+            camera_path = self.camera.capture(gp.GP_CAPTURE_IMAGE, self.context)
+            self.logger.info('Image on camera {0}/{1}'.format(camera_path.folder, camera_path.name))
+            photoset['camerapaths'].append(camera_path)
+
+        except Exception as e:
+            self._exit_camera() # only exit on exception as we need to keep camera-connection or capturing to camera RAM will fail on camera.file_get().
+            raise e
 
     def transferPicture(self, photoset):
-        camera_path = photoset['camerapaths'][len(photoset['camerapaths']) - 1]
-        filename = "%s_%s.jpg" % (photoset['id'], len(photoset['photos']) + 1)
-        target_path = os.path.join(CONSTANTS.CAPTURE_FOLDER, filename)
-        self.logger.debug('Copying image to {0}'.format(target_path))
-        self.camera.init(self.context)
-        camera_file = self.camera.file_get(camera_path.folder, camera_path.name, gp.GP_FILE_TYPE_NORMAL, self.context)
-        camera_file.save(target_path)
-        self.camera.exit(self.context)
+        try:
+            camera_path = photoset['camerapaths'][len(photoset['camerapaths']) - 1]
+            timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S');
+            filename = "%s_%s_%s.jpg" % (timestamp, photoset['id'], len(photoset['photos']) + 1)
+            target_path = os.path.join(CONSTANTS.CAPTURE_FOLDER, filename)
+            self.logger.debug('Copying image from {0}/{1} to {2}'.format(camera_path.folder, camera_path.name, target_path))
+            # self._init_camera()
+            camera_file = self.camera.file_get(camera_path.folder, camera_path.name, gp.GP_FILE_TYPE_NORMAL, self.context)
+            camera_file.save(target_path)
+        finally:
+            self._exit_camera()
 
         if os.path.isfile(target_path):
             photoset['photos'].append(target_path)
             self.logger.info("Added Photo to Photoset " + target_path)
         else:
-            self.logger.error("Error while taking Photo: " + target_path)
+            raise Exception("File expected in path {0} but none found.".format(target_path))
 
     def _setCaptureTargetToCard(self):
         self._setCameraParameter('capturetarget', CAPTURETARGET_MEMORY_CARD)
@@ -80,6 +90,15 @@ class CameraAdapter(object):
     def __delete__(self, instance):
         instance.camera.exit()
 
+    def _init_camera(self):
+        self.logger.debug("Initializing Camera...")
+        self.camera.init(self.context)
+        self.logger.debug("Camera initialized.")
+
+    def _exit_camera(self):
+        self.logger.debug("Exiting Camera...")
+        self.camera.exit(self.context)
+        self.logger.debug("Camera exited.")
 
 class FakeCameraAdapter(CameraAdapter):
     logger = logging.getLogger("FakeCameraAdapter")
