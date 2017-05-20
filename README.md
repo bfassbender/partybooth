@@ -23,6 +23,13 @@
 - sudo apt-get install imagemagick
 - sudo apt-get install python-imaging
 
+### Updating to latest Pillow and gphoto
+The box is known to run with python-gphoto 1.6.0 an Pillo 4.1.1
+- sudo easy_install -U gphoto2
+- sudo apt-get install libjpeg8-dev
+  Pillow needs libjpeg to be able to compile
+- sudo easy_install -U Pillow
+
 ## Tweaking Raspberry Pi Pixel
 ### Disable Tooltips
 nano ~/.themes/PiX/gtk-2.0/gtkrc
