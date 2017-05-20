@@ -2,8 +2,8 @@
 
 # import tkinter as tk   # python3
 import Tkinter as tk  # python
-import tkFont
 import logging
+import tkFont
 
 from PIL import ImageTk
 
@@ -114,7 +114,7 @@ class PartyBooth(tk.Tk):
         logger.addHandler(ch)
         logger.addHandler(fh)
 
-        # Configure other Loggers
+        # Configure Partybooth s Loggers
         logging.getLogger('PartyBooth').setLevel(logging.DEBUG)
 
         # Configure other Loggers

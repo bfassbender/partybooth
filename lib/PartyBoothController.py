@@ -47,11 +47,12 @@ class PartyBoothController(object):
     def capturePhoto(self, photoset):
         self.setCurrentStateTo(PartyBoothController.STATE_CAPTURING)
         try:
+            #for i in range(1,200):
             self.cameraAdapter.takePicture(photoset)
             frame = self.partyBoothUI.showPage(PhotoReviewPage.__name__)
             self.cameraAdapter.transferPicture(photoset)
-            frame.displayLastPhoto(photoset)
             self.setCurrentStateTo(PartyBoothController.STATE_REVIEWING)
+            frame.displayLastPhoto(photoset)
         except Exception as e:
             self.logger.error("Taking Picture failed")
             self.setCurrentStateTo(PartyBoothController.STATE_ERROR)

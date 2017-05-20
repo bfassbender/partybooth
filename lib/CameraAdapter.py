@@ -31,8 +31,8 @@ class CameraAdapter(object):
         try:
             self.logger.info("Connecting to Camera...")
             self._init_camera()
-            self._setCaptureTargetToCard()
-            self._setImageTypeToJpg()
+            self._setCaptureTarget(CAPTURETARGET_INTERNAL_RAM)
+            self._setCaptureFormat(IMAGEFORMAT_JPG_LARGE_FINE)
             self.logger.info("Connection successful!")
         finally:
             self._exit_camera()
@@ -60,6 +60,9 @@ class CameraAdapter(object):
             # self._init_camera()
             camera_file = self.camera.file_get(camera_path.folder, camera_path.name, gp.GP_FILE_TYPE_NORMAL, self.context)
             camera_file.save(target_path)
+            self.logger.debug(
+            'Deleting image from {0}/{1} on camera.'.format(camera_path.folder, camera_path.name))
+            self.camera.file_delete(camera_path.folder, camera_path.name, self.context)
         finally:
             self._exit_camera()
 
@@ -69,26 +72,27 @@ class CameraAdapter(object):
         else:
             raise Exception("File expected in path {0} but none found.".format(target_path))
 
-    def _setCaptureTargetToCard(self):
-        self._setCameraParameter('capturetarget', CAPTURETARGET_MEMORY_CARD)
+    def _setCaptureTarget(self, target):
+        self._setCameraParameter('capturetarget', target)
 
-    def _setImageTypeToJpg(self):
-        self._setCameraParameter('imageformat', IMAGEFORMAT_JPG_MEDIUM_FINE)
-        self._setCameraParameter('imageformatcf', IMAGEFORMAT_JPG_MEDIUM_FINE)
+    def _setCaptureFormat(self, format):
+        self._setCameraParameter('imageformat', format)
+        self._setCameraParameter('imageformatcf', format)
 
     def _setCameraParameter(self, parameter, to_value):
+        self.logger.info("Setting camera config parameter '{0}' to value '{1}'".format(parameter,to_value))
         # get configuration tree
         config = gp.check_result(gp.gp_camera_get_config(self.camera, self.context))
         # find the capture target config item
-        capture_target = gp.check_result(
-            gp.gp_widget_get_child_by_name(config, parameter))
+        capture_target = gp.check_result(gp.gp_widget_get_child_by_name(config, parameter))
         value = gp.check_result(gp.gp_widget_get_choice(capture_target, to_value))
         gp.check_result(gp.gp_widget_set_value(capture_target, value))
         # set config
         gp.check_result(gp.gp_camera_set_config(self.camera, config, self.context))
 
     def __delete__(self, instance):
-        instance.camera.exit()
+        self.logger.debug("Destructor: Exiting Camera...")
+        instance.camera.exit(instance.context)
 
     def _init_camera(self):
         self.logger.debug("Initializing Camera...")
@@ -117,7 +121,7 @@ class FakeCameraAdapter(CameraAdapter):
     def _setCaptureTargetToCard(self):
         pass
 
-    def _setImageTypeToJpg(self):
+    def _setCaptureFormat(self):
         pass
 
     #
