@@ -4,6 +4,7 @@ import os
 import uuid
 import RPi.GPIO as GPIO
 import atexit
+import shutil
 
 import gphoto2 as gp
 
@@ -71,6 +72,13 @@ class PartyBoothController(object):
         except OSError:
             if not os.path.isdir(path):
                 raise
+
+    def saveToStick(self, photoset):
+        src_path = photoset['thumbs'][len(photoset['thumbs']) - 1]
+        target_path = photoset['photos'][len(photoset['photos']) - 1]
+        self.logger.debug('Moving image from {0} to {1}'.format(src_path, target_path))
+        shutil.copyfile(src_path, target_path)
+        os.remove(src_path)
 
     def createCameraAdapter(self):
         useFake = os.environ.get(CONSTANTS.ENV_USE_CAMERA_STUB)

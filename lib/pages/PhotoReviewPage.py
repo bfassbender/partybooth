@@ -27,7 +27,7 @@ class PhotoReviewPage(tk.Frame):
     # TODO has to be refactored intro controller
     def displayLastPhoto(self, photoset):
 
-        photo_path = photoset['photos'][len(photoset['thumbs']) - 1]
+        photo_path = photoset['thumbs'][len(photoset['thumbs']) - 1]
 
         self.logger.info("Loading photo " + photo_path)
         load = Image.open(photo_path)
@@ -49,8 +49,9 @@ class PhotoReviewPage(tk.Frame):
         self.imageLabel.pack(fill=tk.BOTH, expand=True)
         self.imageLabel.update()
 
-        self.after_id = self.after(4000, self.returnToStartPage)
+        self.after_id = self.after(3000, self.returnToStartPage)
         self.logger.debug("Registered after_id: %s" % self.after_id)
+        self.controller.saveToStick(photoset)
 
     def returnToStartPage(self):
         self.logger.debug("Cancelled after_id: %s" % self.after_id)

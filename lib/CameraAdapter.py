@@ -1,7 +1,6 @@
 # coding=UTF-8
 import logging
 import os
-import time
 import shutil
 from datetime import datetime
 import gphoto2 as gp
@@ -66,10 +65,9 @@ class CameraAdapter(object):
         finally:
             self._exit_camera()
 
-        if os.path.isfile(target_path):
-            self.logger.debug('Moving image from {0} to {1}'.format(tmp_path, target_path))
-            shutil.move(tmp_path,target_path)
+        if os.path.isfile(tmp_path):
             photoset['photos'].append(target_path)
+            photoset['thumbs'].append(tmp_path)
             self.logger.info("Added Photo to Photoset " + target_path)
         else:
             raise Exception("File expected in path {0} but none found.".format(target_path))
