@@ -47,6 +47,7 @@ class PhotoReviewPage(tk.Frame):
 
         self.label.pack_forget()
         self.imageLabel.pack(fill=tk.BOTH, expand=True)
+        self.imageLabel.update()
 
         self.after_id = self.after(4000, self.returnToStartPage)
         self.logger.debug("Registered after_id: %s" % self.after_id)

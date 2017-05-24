@@ -2,10 +2,9 @@
 import logging
 import os
 import time
+import shutil
 from datetime import datetime
-
 import gphoto2 as gp
-
 import constants as CONSTANTS
 
 CAPTURETARGET_INTERNAL_RAM = 0
@@ -55,11 +54,12 @@ class CameraAdapter(object):
             camera_path = photoset['camerapaths'][len(photoset['camerapaths']) - 1]
             timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S');
             filename = "%s_%s_%s.jpg" % (timestamp, photoset['id'], len(photoset['photos']) + 1)
+            tmp_path = os.path.join(CONSTANTS.TEMP_FOLDER, filename)
             target_path = os.path.join(CONSTANTS.CAPTURE_FOLDER, filename)
-            self.logger.debug('Copying image from {0}/{1} to {2}'.format(camera_path.folder, camera_path.name, target_path))
+            self.logger.debug('Retrieving image from {0}/{1} to {2}'.format(camera_path.folder, camera_path.name, tmp_path))
             # self._init_camera()
             camera_file = self.camera.file_get(camera_path.folder, camera_path.name, gp.GP_FILE_TYPE_NORMAL, self.context)
-            camera_file.save(target_path)
+            camera_file.save(tmp_path)
             self.logger.debug(
             'Deleting image from {0}/{1} on camera.'.format(camera_path.folder, camera_path.name))
             self.camera.file_delete(camera_path.folder, camera_path.name, self.context)
@@ -67,6 +67,8 @@ class CameraAdapter(object):
             self._exit_camera()
 
         if os.path.isfile(target_path):
+            self.logger.debug('Moving image from {0} to {1}'.format(tmp_path, target_path))
+            shutil.move(tmp_path,target_path)
             photoset['photos'].append(target_path)
             self.logger.info("Added Photo to Photoset " + target_path)
         else:
@@ -91,39 +93,36 @@ class CameraAdapter(object):
         gp.check_result(gp.gp_camera_set_config(self.camera, config, self.context))
 
     def __delete__(self, instance):
-        self.logger.debug("Destructor: Exiting Camera...")
+        self.logger.debug("Destructor: Exiting Camera.")
         instance.camera.exit(instance.context)
 
     def _init_camera(self):
-        self.logger.debug("Initializing Camera...")
+        self.logger.debug("Initializing Camera.")
         self.camera.init(self.context)
-        self.logger.debug("Camera initialized.")
 
     def _exit_camera(self):
-        self.logger.debug("Exiting Camera...")
+        self.logger.debug("Exiting Camera.")
         self.camera.exit(self.context)
-        self.logger.debug("Camera exited.")
 
 class FakeCameraAdapter(CameraAdapter):
     logger = logging.getLogger("FakeCameraAdapter")
 
     def takePicture(self, photoset):
-        time.sleep(1);
-        source_path = os.path.join(CONSTANTS.STUB_IMAGE_FOLDER,
+        self.logger.info('Enter: takePicture')
+        camera_path = os.path.join(CONSTANTS.STUB_IMAGE_FOLDER,
                                    str(len(photoset['photos']) + 1) + self.IMAGE_EXTENSION)
-
-        photoset['photos'].append(source_path)
-        self.logger.info("Added Photo to Photoset " + source_path)
+        photoset['camerapaths'].append(camera_path)
 
     def connectToCamera(self):
-        pass
+        self.logger.info('Enter: connectToCamera')
 
-    def _setCaptureTargetToCard(self):
-        pass
-
-    def _setCaptureFormat(self):
-        pass
-
-    #
     def transferPicture(self, photoset):
-        pass
+        self.logger.info('Enter: transferPicture')
+        camera_path = photoset['camerapaths'][len(photoset['camerapaths']) - 1]
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S');
+        filename = "%s_%s_%s.jpg" % (timestamp, photoset['id'], len(photoset['photos']) + 1)
+        target_path = os.path.join(CONSTANTS.CAPTURE_FOLDER, filename)
+        self.logger.info('Copying image from {0} to {1}'.format(camera_path, target_path))
+        shutil.copy(camera_path, target_path)
+        photoset['photos'].append(target_path)
+        self.logger.info("Added Photo to Photoset " + target_path)

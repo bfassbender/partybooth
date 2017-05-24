@@ -11,7 +11,7 @@ GPIO_PIN_17 = 17
 
 CAPTURE_FOLDER = os.path.join("/media/usb")
 
-TEMP_FOLDER = os.path.join("/media/usb/temp")
+TEMP_FOLDER = os.path.join("/tmp")
 
 PHOTOS_FOLDER = os.path.join(PWD, "photos")
 
