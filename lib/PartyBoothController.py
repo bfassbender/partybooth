@@ -2,6 +2,7 @@
 import logging
 import os
 import uuid
+import time
 import RPi.GPIO as GPIO
 import atexit
 import shutil
@@ -77,8 +78,12 @@ class PartyBoothController(object):
         src_path = photoset['thumbs'][len(photoset['thumbs']) - 1]
         target_path = photoset['photos'][len(photoset['photos']) - 1]
         self.logger.debug('Moving image from {0} to {1}'.format(src_path, target_path))
+
+        start_time = time.time()
         shutil.copyfile(src_path, target_path)
         os.remove(src_path)
+        elapsed_time = time.time() - start_time
+        self.logger.debug('Moving took {0} seconds'.format(elapsed_time))
 
     def createCameraAdapter(self):
         useFake = os.environ.get(CONSTANTS.ENV_USE_CAMERA_STUB)

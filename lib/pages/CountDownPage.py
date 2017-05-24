@@ -41,7 +41,7 @@ class CountDownPage(tk.Frame):
         self.countdownLabel.forget()
         self.smileLabel.pack(fill=tk.BOTH, expand=True)
         self.update()
-        time.sleep(.3)
+        #time.sleep(.3)
 
     def showCountDownLabel(self):
         self.smileLabel.forget()

@@ -1,9 +1,7 @@
 # coding=UTF-8
 import Tkinter as tk
 import logging
-import os
-import subprocess
-
+import time
 from PIL import ImageTk, Image
 
 import constants as CONSTANTS
@@ -23,6 +21,7 @@ class PhotoReviewPage(tk.Frame):
         self.label = tk.Label(self, fg='white', bg='DarkOrange1',
                               text="Ich verarbeite\ndas Foto...", font=(CONSTANTS.FONT_FACE, CONSTANTS.FONT_SIZE_LARGE))
         self.label.pack(fill=tk.BOTH, expand=True)
+        self.update()
 
     # TODO has to be refactored intro controller
     def displayLastPhoto(self, photoset):
@@ -37,7 +36,11 @@ class PhotoReviewPage(tk.Frame):
         baseHeight = 480
         heightRatio = (baseHeight / float(load.size[1]))
         calculatedWidth = int((float(load.size[0]) * float(heightRatio)))
+
+        start_time = time.time()
         load = load.resize((calculatedWidth, baseHeight), Image.NEAREST)
+        elapsed_time = time.time() - start_time
+        self.logger.info("Resizing took {0} seconds".format(elapsed_time));
         self.logger.info("Displaying photo")
 
         render = ImageTk.PhotoImage(image=load)
