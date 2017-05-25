@@ -59,8 +59,7 @@ class CameraAdapter(object):
             # self._init_camera()
             camera_file = self.camera.file_get(camera_path.folder, camera_path.name, gp.GP_FILE_TYPE_NORMAL, self.context)
             camera_file.save(tmp_path)
-            self.logger.debug(
-            'Deleting image from {0}/{1} on camera.'.format(camera_path.folder, camera_path.name))
+            self.logger.debug('Deleting image {0}/{1} from camera.'.format(camera_path.folder, camera_path.name))
             self.camera.file_delete(camera_path.folder, camera_path.name, self.context)
         finally:
             self._exit_camera()
@@ -68,7 +67,7 @@ class CameraAdapter(object):
         if os.path.isfile(tmp_path):
             photoset['photos'].append(target_path)
             photoset['thumbs'].append(tmp_path)
-            self.logger.info("Added Photo to Photoset " + target_path)
+            self.logger.info("Added Photo to Photoset " + tmp_path)
         else:
             raise Exception("File expected in path {0} but none found.".format(target_path))
 

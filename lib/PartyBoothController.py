@@ -36,6 +36,7 @@ class PartyBoothController(object):
         self.logger.info("GPIO Version is %s" % GPIO.VERSION)
 
     def startCountDown(self):
+        #for i in range(1, 400):
         page = self.partyBoothUI.showPage(CountDownPage.__name__)
         page.showSmileLabel()
         photoset = self.createPhotoset()
@@ -49,12 +50,12 @@ class PartyBoothController(object):
     def capturePhoto(self, photoset):
         self.setCurrentStateTo(PartyBoothController.STATE_CAPTURING)
         try:
-            #for i in range(1,200):
             self.cameraAdapter.takePicture(photoset)
             frame = self.partyBoothUI.showPage(PhotoReviewPage.__name__)
             self.cameraAdapter.transferPicture(photoset)
             self.setCurrentStateTo(PartyBoothController.STATE_REVIEWING)
             frame.displayLastPhoto(photoset)
+            self.saveToStick(photoset)
         except Exception as e:
             self.logger.error("Taking Picture failed")
             self.setCurrentStateTo(PartyBoothController.STATE_ERROR)
@@ -77,8 +78,8 @@ class PartyBoothController(object):
     def saveToStick(self, photoset):
         src_path = photoset['thumbs'][len(photoset['thumbs']) - 1]
         target_path = photoset['photos'][len(photoset['photos']) - 1]
-        self.logger.debug('Moving image from {0} to {1}'.format(src_path, target_path))
 
+        self.logger.debug('Moving image from {0} to {1}'.format(src_path, target_path))
         start_time = time.time()
         shutil.copyfile(src_path, target_path)
         os.remove(src_path)

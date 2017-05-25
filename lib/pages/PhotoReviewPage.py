@@ -38,7 +38,7 @@ class PhotoReviewPage(tk.Frame):
         calculatedWidth = int((float(load.size[0]) * float(heightRatio)))
 
         start_time = time.time()
-        load = load.resize((calculatedWidth, baseHeight), Image.NEAREST)
+        load = load.resize((calculatedWidth, baseHeight), Image.NONE)
         elapsed_time = time.time() - start_time
         self.logger.info("Resizing took {0} seconds".format(elapsed_time));
         self.logger.info("Displaying photo")
@@ -50,11 +50,10 @@ class PhotoReviewPage(tk.Frame):
 
         self.label.pack_forget()
         self.imageLabel.pack(fill=tk.BOTH, expand=True)
-        self.imageLabel.update()
+        self.update()
 
         self.after_id = self.after(3000, self.returnToStartPage)
         self.logger.debug("Registered after_id: %s" % self.after_id)
-        self.controller.saveToStick(photoset)
 
     def returnToStartPage(self):
         self.logger.debug("Cancelled after_id: %s" % self.after_id)
