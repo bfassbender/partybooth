@@ -7,7 +7,7 @@ import RPi.GPIO as GPIO
 import atexit
 import shutil
 
-import gphoto2 as gp
+from subprocess import check_output
 
 import constants as CONSTANTS
 from lib.CameraAdapter import FakeCameraAdapter, CameraAdapter
@@ -36,11 +36,11 @@ class PartyBoothController(object):
         self.logger.info("GPIO Version is %s" % GPIO.VERSION)
 
     def startCountDown(self):
-        #for i in range(1, 400):
-        page = self.partyBoothUI.showPage(CountDownPage.__name__)
-        page.showSmileLabel()
-        photoset = self.createPhotoset()
-        self.capturePhoto(photoset)
+        for i in range(1, 400):
+         page = self.partyBoothUI.showPage(CountDownPage.__name__)
+         page.showSmileLabel()
+         photoset = self.createPhotoset()
+         self.capturePhoto(photoset)
 
     @staticmethod
     def createPhotoset():
@@ -52,7 +52,7 @@ class PartyBoothController(object):
         try:
             self.cameraAdapter.takePicture(photoset)
             frame = self.partyBoothUI.showPage(PhotoReviewPage.__name__)
-            self.cameraAdapter.transferPicture(photoset)
+            #self.cameraAdapter.transferPicture(photoset)
             self.setCurrentStateTo(PartyBoothController.STATE_REVIEWING)
             frame.displayLastPhoto(photoset)
             self.saveToStick(photoset)
@@ -121,11 +121,11 @@ class PartyBoothController(object):
         try:
             self.cameraAdapter.connectToCamera()
             self.getReadyForNextCapture()
-        except gp.GPhoto2Error as ex:
-            if ex.code == gp.GP_ERROR_MODEL_NOT_FOUND:
-                self.logger.warn("Could not connect to camera. Retrying ...")
-                frame.after(2000, self.checkCameraConnection, frame)
-            else:
+        except Exception as ex:
+            #if ex.code == gp.GP_ERROR_MODEL_NOT_FOUND:
+            #    self.logger.warn("Could not connect to camera. Retrying ...")
+            #    frame.after(2000, self.checkCameraConnection, frame)
+            #else:
                 self.setCurrentStateTo(PartyBoothController.STATE_ERROR)
                 self.logger.exception(ex)
                 self.partyBoothUI.showPage(ErrorPage.__name__)
