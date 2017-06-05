@@ -6,8 +6,9 @@ import time
 import RPi.GPIO as GPIO
 import atexit
 import shutil
+from threading import Thread
 
-from subprocess import check_output
+from subprocess import CalledProcessError
 
 import constants as CONSTANTS
 from lib.CameraAdapter import FakeCameraAdapter, CameraAdapter
@@ -35,12 +36,21 @@ class PartyBoothController(object):
         self.logger.info("Controller initialized.")
         self.logger.info("GPIO Version is %s" % GPIO.VERSION)
 
-    def startCountDown(self):
+    def testThread(self):
         for i in range(1, 400):
-         page = self.partyBoothUI.showPage(CountDownPage.__name__)
-         page.showSmileLabel()
-         photoset = self.createPhotoset()
-         self.capturePhoto(photoset)
+            self.onRfButtonPressed(i)
+            self.logger.info("Pressed RF-button {0} times".format(i))
+            time.sleep(1)
+
+    def testrun(self):
+        t=Thread(target=self.testThread)
+        t.start()
+
+    def startCountDown(self):
+        page = self.partyBoothUI.showPage(CountDownPage.__name__)
+        page.showSmileLabel()
+        photoset = self.createPhotoset()
+        self.capturePhoto(photoset)
 
     @staticmethod
     def createPhotoset():
@@ -56,6 +66,13 @@ class PartyBoothController(object):
             self.setCurrentStateTo(PartyBoothController.STATE_REVIEWING)
             frame.displayLastPhoto(photoset)
             self.saveToStick(photoset)
+
+        except CalledProcessError as cpe:
+            self.logger.error("Taking Picture failed")
+            self.setCurrentStateTo(PartyBoothController.STATE_ERROR)
+            self.logger.error(cpe.output)
+            self.partyBoothUI.showPage(ErrorPage.__name__)
+
         except Exception as e:
             self.logger.error("Taking Picture failed")
             self.setCurrentStateTo(PartyBoothController.STATE_ERROR)
@@ -126,9 +143,9 @@ class PartyBoothController(object):
             #    self.logger.warn("Could not connect to camera. Retrying ...")
             #    frame.after(2000, self.checkCameraConnection, frame)
             #else:
-                self.setCurrentStateTo(PartyBoothController.STATE_ERROR)
-                self.logger.exception(ex)
-                self.partyBoothUI.showPage(ErrorPage.__name__)
+            self.setCurrentStateTo(PartyBoothController.STATE_ERROR)
+            self.logger.exception(ex)
+            self.partyBoothUI.showPage(ErrorPage.__name__)
 
     def onRfButtonPressed(self, event):
         if PartyBoothController.STATE_READY == self.current_state:

@@ -7,6 +7,7 @@ from datetime import datetime
 import constants as CONSTANTS
 
 from subprocess import check_output
+import subprocess
 
 CAPTURETARGET_INTERNAL_RAM = 0
 CAPTURETARGET_MEMORY_CARD = 1
@@ -23,15 +24,26 @@ class CameraAdapter(object):
     logger = logging.getLogger("PartyBooth.CameraAdapter")
 
     def __init__(self):
-        self.logger.info(check_output(["gphoto2", "--auto-detect"]))
+        try:
+            self.logger.debug("Resetting USB")
+            output = check_output(["gphoto2", "--reset", "-q"], stderr=subprocess.STDOUT)
+            self.logger.debug(output)
+        except subprocess.CalledProcessError as ex:
+            self.logger.warn("Resetting USB failed with returncode {0} and output '{1}'".format(ex.returncode, ex.output))
+
+        self.logger.info(check_output(["gphoto2", "--auto-detect"], stderr=subprocess.STDOUT))
         self.logger.info("CameraAdapter initialized!")
 
     def connectToCamera(self):
         self.logger.info("Connecting to Camera...")
-        self._setCaptureTarget(CAPTURETARGET_INTERNAL_RAM)
-        self._setCaptureFormat(IMAGEFORMAT_JPG_LARGE_FINE)
-        self.logger.info("Connection successful!")
+        try:
+            self._setCaptureTarget(CAPTURETARGET_INTERNAL_RAM)
+            self._setCaptureFormat(IMAGEFORMAT_JPG_LARGE_FINE)
+            self.logger.info("Connection successful!")
 
+        except subprocess.CalledProcessError as gpe:
+            self.logger.error("Connection to camera failed with returncode {0} and output {1}".format(gpe.returncode, gpe.output))
+            raise gpe
 
     def takePicture(self, photoset):
         self.logger.info("Taking Photo...")
@@ -41,7 +53,14 @@ class CameraAdapter(object):
         target_path = os.path.join(CONSTANTS.CAPTURE_FOLDER, filename)
 
         start_time = time.time()
-        check_output(['gphoto2', '--capture-image-and-download', '--keep', '--force-overwrite', '--filename', tmp_path])
+        try:
+            output = check_output(['gphoto2', '--capture-image-and-download', '--keep', '--force-overwrite', '--filename', tmp_path], stderr=subprocess.STDOUT)
+            self.logger.info("Taking Picture successful with output {0}".format(output))
+
+        except subprocess.CalledProcessError as gpe:
+            self.logger.error("Taking Picture failed with returncode {0} and output\n{1}".format(gpe.returncode, gpe.output))
+            raise gpe
+
         elapsed_time = time.time() - start_time
         self.logger.debug('Capture and download took {0} seconds'.format(elapsed_time))
 
@@ -62,7 +81,7 @@ class CameraAdapter(object):
     def _setCameraParameter(self, parameter, to_value):
         self.logger.info("Setting camera config parameter '{0}' to value '{1}'".format(parameter,to_value))
         param_string = parameter + "=" + str(to_value)
-        self.logger.debug(check_output(["gphoto2","--set-config", param_string]))
+        self.logger.debug(check_output(["gphoto2","--set-config", param_string], stderr=subprocess.STDOUT))
 
 class FakeCameraAdapter(CameraAdapter):
     logger = logging.getLogger("FakeCameraAdapter")
