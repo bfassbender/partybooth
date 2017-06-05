@@ -28,5 +28,5 @@ class ErrorPage(tk.Frame):
         self.controller.resetBooth()
 
     def startReturnToStartPageTimer(self):
-        self.after_id = self.after(5000, self.callBoothReset)
+        self.after_id = self.after(3000, self.callBoothReset)
         self.logger.debug("Registered after_id: %s" % self.after_id)

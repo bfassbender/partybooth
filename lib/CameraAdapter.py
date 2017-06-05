@@ -72,10 +72,14 @@ class CameraAdapter(object):
 
         finally:
             if camera and context:
-                self.logger.debug("Exiting Camera")
-                gp.check_result(gp.gp_camera_exit(camera, context))
+                self._exit_camera(camera,context)
                 elapsed_time = time.time() - start_time
                 self.logger.info('Capture and download took {0} seconds'.format(elapsed_time))
+
+    def _exit_camera(self, camera, context):
+        self.logger.debug("Exiting camera...")
+        gp.check_result(gp.gp_camera_exit(camera, context))
+        self.logger.debug("Exited camera")
 
     def _setCaptureTarget(self, target):
         self._setCameraParameter('capturetarget', target)
@@ -106,8 +110,7 @@ class CameraAdapter(object):
             gp.check_result(gp.gp_camera_set_config(camera, config, context))
         finally:
             if camera and context:
-                self.logger.debug("Exiting Camera")
-                gp.check_result(gp.gp_camera_exit(camera, context))
+                self._exit_camera(camera, context)
 
 class FakeCameraAdapter(CameraAdapter):
     logger = logging.getLogger("FakeCameraAdapter")
