@@ -41,7 +41,7 @@ class PartyBoothController(object):
         self.logger.info("GPIO Version is %s" % GPIO.VERSION)
 
     def testThread(self):
-        for i in range(1, 20):
+        for i in range(1, 500):
             self.onRfButtonPressed(i)
             self.logger.info("Pressed RF-button {0} times".format(i))
             time.sleep(1)
@@ -152,7 +152,7 @@ class PartyBoothController(object):
         else:
             self.logger.info("Ignoring Button press. Current state [%s] does not match [%s]" % (self.current_state, PartyBoothController.STATE_READY))
 
-    
+
     def setupGpio(self):
         self.logger.info("Setting up GPIO...")
         GPIO.setmode(GPIO.BCM)
@@ -182,4 +182,3 @@ class PartyBoothController(object):
 def onExit():
     logging.getLogger("PartyBooth.PartyBoothController").info("Cleanig up GPIO...")
     GPIO.cleanup()
-

@@ -44,7 +44,7 @@ class PartyBooth(tk.Tk):
         self.logger.info("####################################################################")
         self.controller.connectToCamera()
         # background.lower()
-        self.controller.testrun()
+        # self.controller.testrun()
 
     def logFonts(self):
         fonts = list(tkFont.families())
