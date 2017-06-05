@@ -7,6 +7,8 @@ import RPi.GPIO as GPIO
 import atexit
 import shutil
 
+from threading import Thread
+
 import gphoto2 as gp
 
 import constants as CONSTANTS
@@ -26,6 +28,9 @@ class PartyBoothController(object):
     STATE_REVIEWING = "reviewing"
     STATE_ERROR = "error"
 
+    capture_count = 0
+    error_count = 0
+
     def __init__(self, partyBoothUI):
         self.partyBoothUI = partyBoothUI
         self.cameraAdapter = self.createCameraAdapter()
@@ -35,11 +40,20 @@ class PartyBoothController(object):
         self.logger.info("Controller initialized.")
         self.logger.info("GPIO Version is %s" % GPIO.VERSION)
 
+    def testThread(self):
+        for i in range(1, 20):
+            self.onRfButtonPressed(i)
+            self.logger.info("Pressed RF-button {0} times".format(i))
+            time.sleep(1)
+
+    def testrun(self):
+        t=Thread(target=self.testThread)
+        t.start()
+
     def startCountDown(self):
-        #for i in range(1, 400):
+        photoset = self.createPhotoset()
         page = self.partyBoothUI.showPage(CountDownPage.__name__)
         page.showSmileLabel()
-        photoset = self.createPhotoset()
         self.capturePhoto(photoset)
 
     @staticmethod
@@ -52,14 +66,15 @@ class PartyBoothController(object):
         try:
             self.cameraAdapter.takePicture(photoset)
             frame = self.partyBoothUI.showPage(PhotoReviewPage.__name__)
-            self.cameraAdapter.transferPicture(photoset)
             self.setCurrentStateTo(PartyBoothController.STATE_REVIEWING)
             frame.displayLastPhoto(photoset)
             self.saveToStick(photoset)
+            self.increaseCaptureCount()
         except Exception as e:
             self.logger.error("Taking Picture failed")
             self.setCurrentStateTo(PartyBoothController.STATE_ERROR)
             self.logger.exception(e)
+            self.increaseErrorCount()
             self.partyBoothUI.showPage(ErrorPage.__name__)
 
     def prepare_directory_structure(self):
@@ -128,6 +143,7 @@ class PartyBoothController(object):
             else:
                 self.setCurrentStateTo(PartyBoothController.STATE_ERROR)
                 self.logger.exception(ex)
+                self.increaseErrorCount()
                 self.partyBoothUI.showPage(ErrorPage.__name__)
 
     def onRfButtonPressed(self, event):
@@ -147,6 +163,19 @@ class PartyBoothController(object):
     def setCurrentStateTo(self, state):
         self.current_state = state
         self.logger.info("STATE is [%s]" % self.current_state)
+
+    def increaseCaptureCount(self):
+        self.capture_count += 1
+        self.logStatistics()
+
+    def increaseErrorCount(self):
+        self.error_count += 1
+        self.logStatistics()
+
+    def logStatistics(self):
+        self.logger.debug("###############################")
+        self.logger.debug("# {0} PICTURES - {1} ERRORS ".format(self.capture_count, self.error_count))
+        self.logger.debug("###############################")
 
 
 @atexit.register

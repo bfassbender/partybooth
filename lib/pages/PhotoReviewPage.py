@@ -59,5 +59,6 @@ class PhotoReviewPage(tk.Frame):
         self.logger.debug("Cancelled after_id: %s" % self.after_id)
         self.after_cancel(self.after_id)
         self.imageLabel.pack_forget()
+        self.imageLabel.image = None
         self.label.pack(fill=tk.BOTH, expand=True)
         self.controller.getReadyForNextCapture()

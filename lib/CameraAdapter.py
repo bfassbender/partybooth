@@ -2,9 +2,13 @@
 import logging
 import os
 import shutil
+import time
 from datetime import datetime
 import gphoto2 as gp
 import constants as CONSTANTS
+from subprocess import check_output
+from subprocess import CalledProcessError
+import subprocess
 
 CAPTURETARGET_INTERNAL_RAM = 0
 CAPTURETARGET_MEMORY_CARD = 1
@@ -16,60 +20,62 @@ IMAGEFORMAT_JPG_MEDIUM_NORMAL = 3
 IMAGEFORMAT_JPG_SMALL_FINE = 4
 IMAGEFORMAT_JPG_SMALL_NORMAL = 5
 
+OFF=0
+ON=1
+
 class CameraAdapter(object):
     IMAGE_EXTENSION = '.jpg'
     logger = logging.getLogger("PartyBooth.CameraAdapter")
 
     def __init__(self):
+        try:
+            self.logger.debug("Resetting USB " + check_output(["gphoto2", "--reset", "-q"], stderr=subprocess.STDOUT))
+        except CalledProcessError as ex:
+            self.logger.warn("Resetting USB failed with Retcode {0} and message '{1}'".format(ex.returncode, ex.output))
+
         gp.check_result(gp.use_python_logging())
-        self.context = gp.Context()
-        self.camera = gp.Camera()
 
     def connectToCamera(self):
-        try:
-            self.logger.info("Connecting to Camera...")
-            self._init_camera()
-            self._setCaptureTarget(CAPTURETARGET_INTERNAL_RAM)
-            self._setCaptureFormat(IMAGEFORMAT_JPG_LARGE_FINE)
-            self.logger.info("Connection successful!")
-        finally:
-            self._exit_camera()
+        self.logger.info("Connecting to Camera...")
+        self._setCaptureTarget(CAPTURETARGET_INTERNAL_RAM)
+        self._setCaptureFormat(IMAGEFORMAT_JPG_LARGE_FINE)
+        self._setAutoPoweroff(OFF)
+        self.logger.info("Connection successful!")
 
     def takePicture(self, photoset):
+        self.logger.info("Taking Photo...")
+        start_time = time.time()
+        context = gp.gp_context_new()
+        camera = None
         try:
-            self.logger.info("Taking Photo...")
-            self._init_camera()
-            # subprocess.call(['gphoto2', '--capture-image-and-download', '--keep', '--force-overwrite', '--filename', target_path])
-            camera_path = self.camera.capture(gp.GP_CAPTURE_IMAGE, self.context)
+            camera = gp.check_result(gp.gp_camera_new())
+            gp.check_result(gp.gp_camera_init(camera, context))
+            camera_path = gp.check_result(gp.gp_camera_capture(camera, gp.GP_CAPTURE_IMAGE, context))
             self.logger.info('Image on camera {0}/{1}'.format(camera_path.folder, camera_path.name))
             photoset['camerapaths'].append(camera_path)
 
-        except Exception as e:
-            self._exit_camera() # only exit on exception as we need to keep camera-connection or capturing to camera RAM will fail on camera.file_get().
-            raise e
-
-    def transferPicture(self, photoset):
-        try:
-            camera_path = photoset['camerapaths'][len(photoset['camerapaths']) - 1]
             timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S');
             filename = "%s_%s_%s.jpg" % (timestamp, photoset['id'], len(photoset['photos']) + 1)
             tmp_path = os.path.join(CONSTANTS.TEMP_FOLDER, filename)
             target_path = os.path.join(CONSTANTS.CAPTURE_FOLDER, filename)
-            self.logger.debug('Retrieving image from {0}/{1} to {2}'.format(camera_path.folder, camera_path.name, tmp_path))
-            # self._init_camera()
-            camera_file = self.camera.file_get(camera_path.folder, camera_path.name, gp.GP_FILE_TYPE_NORMAL, self.context)
-            camera_file.save(tmp_path)
-            self.logger.debug('Deleting image {0}/{1} from camera.'.format(camera_path.folder, camera_path.name))
-            self.camera.file_delete(camera_path.folder, camera_path.name, self.context)
-        finally:
-            self._exit_camera()
 
-        if os.path.isfile(tmp_path):
-            photoset['photos'].append(target_path)
-            photoset['thumbs'].append(tmp_path)
-            self.logger.info("Added Photo to Photoset " + tmp_path)
-        else:
-            raise Exception("File expected in path {0} but none found.".format(target_path))
+            self.logger.debug('Retrieving image from {0}/{1} to {2}'.format(camera_path.folder, camera_path.name, tmp_path))
+            camera_file = gp.check_result(gp.gp_camera_file_get(camera, camera_path.folder, camera_path.name, gp.GP_FILE_TYPE_NORMAL, context))
+            gp.check_result(gp.gp_file_save(camera_file, tmp_path))
+
+            if os.path.isfile(tmp_path):
+                photoset['photos'].append(target_path)
+                photoset['thumbs'].append(tmp_path)
+                self.logger.info("Added Photo to Photoset " + tmp_path)
+            else:
+                raise Exception("File expected in path {0} but none found.".format(target_path))
+
+        finally:
+            if camera and context:
+                self.logger.debug("Exiting Camera")
+                gp.check_result(gp.gp_camera_exit(camera, context))
+                elapsed_time = time.time() - start_time
+                self.logger.info('Capture and download took {0} seconds'.format(elapsed_time))
 
     def _setCaptureTarget(self, target):
         self._setCameraParameter('capturetarget', target)
@@ -78,28 +84,30 @@ class CameraAdapter(object):
         self._setCameraParameter('imageformat', format)
         self._setCameraParameter('imageformatcf', format)
 
+    def _setAutoPoweroff(self, value):
+        #self._setCameraParameter('autopoweroff', value)
+        pass
+
     def _setCameraParameter(self, parameter, to_value):
-        self.logger.info("Setting camera config parameter '{0}' to value '{1}'".format(parameter,to_value))
-        # get configuration tree
-        config = gp.check_result(gp.gp_camera_get_config(self.camera, self.context))
-        # find the capture target config item
-        capture_target = gp.check_result(gp.gp_widget_get_child_by_name(config, parameter))
-        value = gp.check_result(gp.gp_widget_get_choice(capture_target, to_value))
-        gp.check_result(gp.gp_widget_set_value(capture_target, value))
-        # set config
-        gp.check_result(gp.gp_camera_set_config(self.camera, config, self.context))
+        context = gp.gp_context_new()
+        camera = None
+        try:
+            camera = gp.check_result(gp.gp_camera_new())
+            gp.check_result(gp.gp_camera_init(camera, context))
 
-    def __delete__(self, instance):
-        self.logger.debug("Destructor: Exiting Camera.")
-        instance.camera.exit(instance.context)
-
-    def _init_camera(self):
-        self.logger.debug("Initializing Camera.")
-        self.camera.init(self.context)
-
-    def _exit_camera(self):
-        self.logger.debug("Exiting Camera.")
-        self.camera.exit(self.context)
+            self.logger.info("Setting camera config parameter '{0}' to value '{1}'".format(parameter, to_value))
+            # get configuration tree
+            config = gp.check_result(gp.gp_camera_get_config(camera, context))
+            # find the capture target config item
+            capture_target = gp.check_result(gp.gp_widget_get_child_by_name(config, parameter))
+            value = gp.check_result(gp.gp_widget_get_choice(capture_target, to_value))
+            gp.check_result(gp.gp_widget_set_value(capture_target, value))
+            # set config
+            gp.check_result(gp.gp_camera_set_config(camera, config, context))
+        finally:
+            if camera and context:
+                self.logger.debug("Exiting Camera")
+                gp.check_result(gp.gp_camera_exit(camera, context))
 
 class FakeCameraAdapter(CameraAdapter):
     logger = logging.getLogger("FakeCameraAdapter")
@@ -109,12 +117,6 @@ class FakeCameraAdapter(CameraAdapter):
         camera_path = os.path.join(CONSTANTS.STUB_IMAGE_FOLDER,
                                    str(len(photoset['photos']) + 1) + self.IMAGE_EXTENSION)
         photoset['camerapaths'].append(camera_path)
-
-    def connectToCamera(self):
-        self.logger.info('Enter: connectToCamera')
-
-    def transferPicture(self, photoset):
-        self.logger.info('Enter: transferPicture')
         camera_path = photoset['camerapaths'][len(photoset['camerapaths']) - 1]
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S');
         filename = "%s_%s_%s.jpg" % (timestamp, photoset['id'], len(photoset['photos']) + 1)
@@ -123,3 +125,7 @@ class FakeCameraAdapter(CameraAdapter):
         shutil.copy(camera_path, target_path)
         photoset['photos'].append(target_path)
         self.logger.info("Added Photo to Photoset " + target_path)
+
+    def connectToCamera(self):
+        self.logger.info('Enter: connectToCamera')
+
