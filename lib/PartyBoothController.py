@@ -37,7 +37,7 @@ class PartyBoothController(object):
         self.logger.info("GPIO Version is %s" % GPIO.VERSION)
 
     def testThread(self):
-        for i in range(1, 400):
+        for i in range(1, 500):
             self.onRfButtonPressed(i)
             self.logger.info("Pressed RF-button {0} times".format(i))
             time.sleep(1)
